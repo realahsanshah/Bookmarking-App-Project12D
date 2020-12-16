@@ -54,7 +54,7 @@ const getWebsites = gql`
 }
 `
 
-const addWebsite=gql`
+const addWebsite = gql`
     mutation CreateABookmark($name:String,$link:String){
         addWebsite(name:$name,link:$link){
             id
@@ -63,6 +63,16 @@ const addWebsite=gql`
         }
     }
 `
+
+const updateWebsite = gql`
+    mutation UpdateBookmark($id:String,$name:String,$link:String){
+        updateWebsite(id:$id,name:$name,link:$link){
+            name
+            link
+        }
+    }
+`
+
 
 function rand() {
     return Math.round(Math.random() * 20) - 10;
@@ -99,7 +109,8 @@ export interface WebsitesProps {
 const Websites: React.SFC<WebsitesProps> = () => {
     const classes = useStyles();
     const { loading, error, data } = useQuery(getWebsites);
-    const [addWeb]=useMutation(addWebsite);
+    const [addWeb] = useMutation(addWebsite);
+    const [updateWeb] = useMutation(updateWebsite);
     const [name, setName] = React.useState('');
     const [link, setLink] = React.useState('');
     const [open, setOpen] = React.useState(false);
@@ -129,10 +140,12 @@ const Websites: React.SFC<WebsitesProps> = () => {
                             console.log('name', value.name)
                             console.log('link', value.link)
 
-                            addWeb({variables:{name:value.name,link:value.link},refetchQueries:[{query:getWebsites}]})
+                            addWeb({ variables: { name: value.name, link: value.link }, refetchQueries: [{ query: getWebsites }] })
 
                             resetForm();
-                            // setCurrentId(null);
+                            setCurrentId(null);
+                            setCurrentName("")
+                            setCurrentLink("");
                         }}>
 
                         {(formik: any) => (
@@ -174,7 +187,7 @@ const Websites: React.SFC<WebsitesProps> = () => {
 
                                         <div>
                                             <Button variant="contained" color="primary" type="submit" className={classes.textField} >
-                                                Add Todo
+                                                Add a Bookmark
                                         </Button>
                                         </div>
                                     </Grid>
@@ -198,7 +211,7 @@ const Websites: React.SFC<WebsitesProps> = () => {
                                                 primary={web.name}
                                                 secondary={
                                                     <React.Fragment>
-                                                        <a href={web.link}>{web.link}</a>
+                                                        <a href={web.link} target="_blank">{web.link}</a>
                                                     </React.Fragment>
                                                 }
                                             />
@@ -216,7 +229,14 @@ const Websites: React.SFC<WebsitesProps> = () => {
                                                             onSubmit={(value, { resetForm }) => {
                                                                 console.log('name', value.name)
                                                                 console.log('link', value.link)
-
+                                                                updateWeb({
+                                                                    variables: {
+                                                                        id: currentId,
+                                                                        name: value.name,
+                                                                        link: value.link
+                                                                    },
+                                                                    refetchQueries: [{ query: getWebsites }]
+                                                                })
                                                                 resetForm();
                                                                 handleClose();
                                                             }}>
