@@ -1,0 +1,16 @@
+{
+  "name": "bookmarks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bookmarks.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ahsan Shah",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-lambda": "^2.18.2",
+    "faunadb": "^4.0.0",
+    "graphql": "^14.1.1"
+  }
+}
