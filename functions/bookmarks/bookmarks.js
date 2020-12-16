@@ -1,100 +1,129 @@
-const {ApolloServer,gql} = require('apollo-server-lambda');
-const faunadb=require('faunadb')
-const query=faunadb.query;
+const { ApolloServer, gql } = require("apollo-server-lambda");
+const faunadb = require("faunadb");
+const query = faunadb.query;
 
-const typeDefs=gql`
-  type Query{
-    getWebsites:[Website]
-
+const typeDefs = gql`
+  type Query {
+    getWebsites: [Website]
   }
 
   type Mutation {
-    addWebsite(name:String,link:String):Website
-    deleteWebsite(id:String):Website
+    addWebsite(name: String, link: String): Website
+    deleteWebsite(id: String): Website
+    updateWebsite(id: String, name: String, link: String): Website
   }
 
-  type Website{
-    id:String
-    name:String
-    link:String
+  type Website {
+    id: String
+    name: String
+    link: String
   }
-
-`
+`;
 
 const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET,
 });
 
-const resolvers={
-  Query:{
-    getWebsites:async ()=>{
+const resolvers = {
+  Query: {
+    getWebsites: async () => {
       var result = await client.query(
         query.Map(
           query.Paginate(query.Documents(query.Collection("websites"))),
-          query.Lambda(x => query.Get(x))
+          query.Lambda((x) => query.Get(x))
         )
-      )
-      const websites=result.data.map(website=>({id:website.ref.id,name:website.data.name,link:website.data.link,}))
+      );
+      const websites = result.data.map((website) => ({
+        id: website.ref.id,
+        name: website.data.name,
+        link: website.data.link,
+      }));
 
-      return websites
+      return websites;
     },
   },
-  Mutation:{
-    addWebsite:async (_,{name,link})=>{
+  Mutation: {
+    addWebsite: async (_, { name, link }) => {
       const item = {
-        data:{name:name,link:link}
-      }
+        data: { name: name, link: link },
+      };
 
-      try{
-        const result=await client.query(query.Create(query.Collection('websites'), item))
-        console.log("result",result);
+      try {
+        const result = await client.query(
+          query.Create(query.Collection("websites"), item)
+        );
+        console.log("result", result);
 
         return {
-          name:result.data.name,
-          link:result.data.link,
-          id:result.ref.id
-        }
-      }
-      catch(error){
-        console.log("Error",error);
+          name: result.data.name,
+          link: result.data.link,
+          id: result.ref.id,
+        };
+      } catch (error) {
+        console.log("Error", error);
         return {
-          name:"error",
-          link:"null",
-          id:"-1"
-        }
+          name: "error",
+          link: "null",
+          id: "-1",
+        };
       }
     },
 
-    deleteWebsite:async(_,{id})=>{
-      try{
-        const result=await client.query(query.Delete(query.Ref(query.Collection('websites'),id)))
-        console.log("result",result);
+    deleteWebsite: async (_, { id }) => {
+      try {
+        const result = await client.query(
+          query.Delete(query.Ref(query.Collection("websites"), id))
+        );
+        console.log("result", result);
 
         return {
-          name:result.data.name,
-          link:result.data.link,
-          id:result.ref.id
-        }
-      }
-      catch(error){
-        console.log("Error",error);
+          name: result.data.name,
+          link: result.data.link,
+          id: result.ref.id,
+        };
+      } catch (error) {
+        console.log("Error", error);
         return {
-          name:"error",
-          link:"null",
-          id:"-1"
-        }
+          name: "error",
+          link: "null",
+          id: "-1",
+        };
       }
-    }
+    },
 
+    updateWebsite: async (_, { id, name, link }) => {
+      const item = {
+        data: { name: name, link: link },
+      };
 
-  }
-}
+      try {
+        const result = await client.query(
+          query.Update(query.Ref(query.Collection("websites"), id), item)
+        );
+        console.log("result", result);
 
-const server=new ApolloServer({
+        return {
+          name: result.data.name,
+          link: result.data.link,
+          id: result.ref.id,
+        };
+      } catch (error) {
+        console.log("Error", error);
+        return {
+          name: "error",
+          link: "null",
+          id: "-1",
+        };
+      }
+    },
+  },
+};
+
+const server = new ApolloServer({
   typeDefs,
   resolvers,
-  playground:true,
-  introspection:true
+  playground: true,
+  introspection: true,
 });
 
-exports.handler=server.createHandler();
+exports.handler = server.createHandler();
