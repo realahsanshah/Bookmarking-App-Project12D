@@ -1,4 +1,4 @@
 [build]
-    command="npm run build && cd functions/faunadb && npm install"
+    command="npm run build && cd functions/bookmarks && npm install"
     publish="public/"
     functions="functions/"
