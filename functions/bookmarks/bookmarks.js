@@ -4,7 +4,7 @@ const query = faunadb.query;
 
 const typeDefs = gql`
   type Query {
-    getWebsites: [Website]
+    websites: [Website]
   }
 
   type Mutation {
@@ -26,7 +26,7 @@ const client = new faunadb.Client({
 
 const resolvers = {
   Query: {
-    getWebsites: async () => {
+    websites: async () => {
       var result = await client.query(
         query.Map(
           query.Paginate(query.Documents(query.Collection("websites"))),
