@@ -54,6 +54,31 @@ const getWebsites = gql`
 }
 `
 
+const addWebsite=gql`
+    mutation CreateABookmark($name:String,$link:String){
+        addWebsite(name:$name,link:$link){
+            id
+            name
+            link
+        }
+    }
+`
+
+function rand() {
+    return Math.round(Math.random() * 20) - 10;
+}
+
+function getModalStyle() {
+    const top = 50 + rand();
+    const left = 50 + rand();
+
+    return {
+        top: `${top}%`,
+        left: `${left}%`,
+        transform: `translate(-${top}%, -${left}%)`,
+    };
+}
+
 
 const schema = Yup.object({
     name: Yup.string()
@@ -73,9 +98,25 @@ export interface WebsitesProps {
 
 const Websites: React.SFC<WebsitesProps> = () => {
     const classes = useStyles();
-    const { loading, error, data, refetch } = useQuery(getWebsites);
+    const { loading, error, data } = useQuery(getWebsites);
+    const [addWeb]=useMutation(addWebsite);
     const [name, setName] = React.useState('');
     const [link, setLink] = React.useState('');
+    const [open, setOpen] = React.useState(false);
+    const [currentId, setCurrentId] = React.useState(null);
+    const [currentName, setCurrentName] = React.useState(null);
+    const [currentLink, setCurrentLink] = React.useState(null);
+
+    const [modalStyle] = React.useState(getModalStyle);
+
+
+    const handleOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     return (
         <div>
@@ -87,7 +128,9 @@ const Websites: React.SFC<WebsitesProps> = () => {
                         onSubmit={(value, { resetForm }) => {
                             console.log('name', value.name)
                             console.log('link', value.link)
-                            
+
+                            addWeb({variables:{name:value.name,link:value.link},refetchQueries:[{query:getWebsites}]})
+
                             resetForm();
                             // setCurrentId(null);
                         }}>
@@ -160,12 +203,80 @@ const Websites: React.SFC<WebsitesProps> = () => {
                                                 }
                                             />
                                             <ListItemSecondaryAction>
+                                                <Modal
+                                                    open={open}
+                                                    onClose={handleClose}
+                                                    aria-labelledby="simple-modal-title"
+                                                    aria-describedby="simple-modal-description"
+                                                >
+                                                    <div style={modalStyle} className={classes.paper}>
+                                                        <Formik
+                                                            initialValues={{ name: currentName, link: currentLink }}
+                                                            validationSchema={schema}
+                                                            onSubmit={(value, { resetForm }) => {
+                                                                console.log('name', value.name)
+                                                                console.log('link', value.link)
+
+                                                                resetForm();
+                                                                handleClose();
+                                                            }}>
+
+                                                            {(formik: any) => (
+                                                                <Form onSubmit={formik.handleSubmit}>
+                                                                    <Grid container justify="center">
+                                                                        <Grid item xs={12}>
+                                                                            <div>
+                                                                                <Field
+                                                                                    type='name'
+                                                                                    as={TextField}
+                                                                                    variant="outlined"
+                                                                                    label="Website Name"
+                                                                                    name="name"
+                                                                                    id="name"
+                                                                                    className={classes.textField}
+                                                                                />
+                                                                                <br />
+                                                                                <ErrorMessage name='name' render={(msg: string) => (
+                                                                                    <span style={{ color: "red", fontSize: '18sp' }}>{msg}</span>
+                                                                                )} />
+                                                                                <br />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Field
+                                                                                    type='link'
+                                                                                    as={TextField}
+                                                                                    variant="outlined"
+                                                                                    label="Website URL"
+                                                                                    name="link"
+                                                                                    id="link"
+                                                                                    className={classes.textField}
+                                                                                />
+                                                                                <br />
+                                                                                <ErrorMessage name='link' render={(msg: string) => (
+                                                                                    <span style={{ color: "red", fontSize: '18sp' }}>{msg}</span>
+                                                                                )} />
+                                                                                <br />
+                                                                            </div>
+
+                                                                            <div>
+                                                                                <Button variant="contained" color="primary" type="submit" className={classes.textField} >
+                                                                                    Update Bookmark
+                                                                                </Button>
+                                                                            </div>
+                                                                        </Grid>
+                                                                    </Grid>
+                                                                </Form>
+                                                            )}
+
+                                                        </Formik>
+                                                    </div>
+                                                </Modal>
                                                 <IconButton edge="end" aria-label="delete" onClick={() => {
-                                                    // console.log('Update Button', todo.id);
-                                                    // setTodo(todo.title);
-                                                    // setCurrentId(todo.id)
-                                                    // setCurrentTitle(todo.title)
-                                                    // handleOpen()
+                                                    console.log('Update Button', web.id);
+                                                    setCurrentId(web.id)
+                                                    setCurrentName(web.name)
+                                                    setCurrentLink(web.link)
+                                                    handleOpen()
                                                 }}>
                                                     <CreateOutlinedIcon />
                                                 </IconButton>
