@@ -12,7 +12,7 @@ import {
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import CreateOutlinedIcon from '@material-ui/icons/CreateOutlined';
 import DeleteIcon from '@material-ui/icons/Delete';
-
+import Swal from 'sweetalert2';
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -73,6 +73,14 @@ const updateWebsite = gql`
     }
 `
 
+const deleteWebsite=gql`
+    mutation DeleteBookmark($id:String){
+        deleteWebsite(id:$id){
+            name
+        }
+    }
+`
+
 
 function rand() {
     return Math.round(Math.random() * 20) - 10;
@@ -86,6 +94,7 @@ function getModalStyle() {
         top: `${top}%`,
         left: `${left}%`,
         transform: `translate(-${top}%, -${left}%)`,
+        alignItems: "center", justifyContent: "center" 
     };
 }
 
@@ -96,8 +105,8 @@ const schema = Yup.object({
         .min(3, 'Must be greater than or equals to 3 characters'),
     link: Yup.string()
         .matches(
-            /((https?):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
-            'Enter correct url!'
+            /((https):\/\/)(www.)?[a-z0-9]+(\.[a-z]{2,}){1,3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/,
+            'Enter correct url! https://www.name.domain'
         )
         .required('Please enter website'),
 })
@@ -111,12 +120,12 @@ const Websites: React.SFC<WebsitesProps> = () => {
     const { loading, error, data } = useQuery(getWebsites);
     const [addWeb] = useMutation(addWebsite);
     const [updateWeb] = useMutation(updateWebsite);
-    const [name, setName] = React.useState('');
-    const [link, setLink] = React.useState('');
+    const [deleteWeb] = useMutation(deleteWebsite);
     const [open, setOpen] = React.useState(false);
     const [currentId, setCurrentId] = React.useState(null);
     const [currentName, setCurrentName] = React.useState(null);
     const [currentLink, setCurrentLink] = React.useState(null);
+    
 
     const [modalStyle] = React.useState(getModalStyle);
 
@@ -134,7 +143,7 @@ const Websites: React.SFC<WebsitesProps> = () => {
             <div>
                 <div>
                     <Formik
-                        initialValues={{ name: name, link: link }}
+                        initialValues={{ name: "", link: "https://www." }}
                         validationSchema={schema}
                         onSubmit={(value, { resetForm }) => {
                             console.log('name', value.name)
@@ -239,6 +248,13 @@ const Websites: React.SFC<WebsitesProps> = () => {
                                                                 })
                                                                 resetForm();
                                                                 handleClose();
+                                                                Swal.fire({
+                                                                    position: 'center',
+                                                                    icon: 'success',
+                                                                    title: 'A todo is updated',
+                                                                    showConfirmButton: false,
+                                                                    timer: 1500
+                                                                  })
                                                             }}>
 
                                                             {(formik: any) => (
@@ -291,7 +307,7 @@ const Websites: React.SFC<WebsitesProps> = () => {
                                                         </Formik>
                                                     </div>
                                                 </Modal>
-                                                <IconButton edge="end" aria-label="delete" onClick={() => {
+                                                <IconButton edge="end" aria-label="update" onClick={() => {
                                                     console.log('Update Button', web.id);
                                                     setCurrentId(web.id)
                                                     setCurrentName(web.name)
@@ -301,19 +317,19 @@ const Websites: React.SFC<WebsitesProps> = () => {
                                                     <CreateOutlinedIcon />
                                                 </IconButton>
                                                 <IconButton edge="end" aria-label="delete" onClick={async () => {
-                                                    // deleteTodo({
-                                                    //     variables:{
-                                                    //         id:todo.id
-                                                    //     },
-                                                    //     refetchQueries: [{ query: getTodos }],
-                                                    // })
-                                                    // Swal.fire({
-                                                    //     position: 'center',
-                                                    //     icon: 'success',
-                                                    //     title: 'A todo is deleted',
-                                                    //     showConfirmButton: false,
-                                                    //     timer: 1500
-                                                    //   })
+                                                    deleteWeb({
+                                                        variables:{
+                                                            id:web.id
+                                                        },
+                                                        refetchQueries: [{ query: getWebsites }],
+                                                    })
+                                                    Swal.fire({
+                                                        position: 'center',
+                                                        icon: 'success',
+                                                        title: 'A todo is deleted',
+                                                        showConfirmButton: false,
+                                                        timer: 1500
+                                                      })
                                                 }}>
                                                     <DeleteIcon />
                                                 </IconButton>
