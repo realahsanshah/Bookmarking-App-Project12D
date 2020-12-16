@@ -10,6 +10,7 @@ const typeDefs=gql`
 
   type Mutation {
     addWebsite(name:String,link:String):Website
+    deleteWebsite(id:String):Website
   }
 
   type Website{
@@ -62,7 +63,30 @@ const resolvers={
           id:"-1"
         }
       }
+    },
+
+    deleteWebsite:async(_,{id})=>{
+      try{
+        const result=await client.query(query.Delete(query.Ref(query.Collection('websites'),id)))
+        console.log("result",result);
+
+        return {
+          name:result.data.name,
+          link:result.data.link,
+          id:result.ref.id
+        }
+      }
+      catch(error){
+        console.log("Error",error);
+        return {
+          name:"error",
+          link:"null",
+          id:"-1"
+        }
+      }
     }
+
+
   }
 }
 
